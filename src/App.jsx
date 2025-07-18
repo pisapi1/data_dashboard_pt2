@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react'
+import Dashboard from './components/Dashboard'
 import './App.css'
 
 const API_KEY = import.meta.env.VITE_APP_API_KEY
 
 function App() {
   const [weatherData, setWeatherData] = useState([])
+  const [filteredData, setFilteredData] = useState([])
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [temperatureFilter, setTemperatureFilter] = useState('all')
 
   // Major cities to fetch weather data for
   const cities = [
@@ -40,6 +44,7 @@ function App() {
         const results = await Promise.all(promises)
         console.log('Weather data fetched:', results)
         setWeatherData(results)
+        setFilteredData(results)
       } catch (error) {
         console.error('Error fetching weather data:', error)
       } finally {
@@ -50,25 +55,38 @@ function App() {
     fetchAllWeatherData()
   }, [])
 
+  // Filter data based on search term and temperature
+  useEffect(() => {
+    let filtered = weatherData.filter(data =>
+      data.cityDisplayName.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+
+    if (temperatureFilter !== 'all') {
+      filtered = filtered.filter(data => {
+        const temp = data.temp
+        switch (temperatureFilter) {
+          case 'hot': return temp > 25 // Above 25°C
+          case 'warm': return temp >= 15 && temp <= 25 // 15-25°C
+          case 'cold': return temp < 15 // Below 15°C
+          default: return true
+        }
+      })
+    }
+
+    setFilteredData(filtered)
+  }, [searchTerm, temperatureFilter, weatherData])
+
   return (
     <div className="app">
-      <h1>🌤️ Weather Dashboard</h1>
-      
-      {loading ? (
-        <p>Loading weather data...</p>
-      ) : (
-        <div className="weather-list">
-          {weatherData.map((data, index) => (
-            <div key={index} className="weather-item">
-              <h3>{data.cityDisplayName}</h3>
-              <p>Temperature: {data.temp}°C ({Math.round(data.temp * 9/5 + 32)}°F)</p>
-              <p>Description: {data.weather.description}</p>
-              <p>Humidity: {data.rh}%</p>
-              <p>Wind Speed: {data.wind_spd} m/s</p>
-            </div>
-          ))}
-        </div>
-      )}
+      <Dashboard 
+        weatherData={filteredData}
+        allData={weatherData}
+        loading={loading}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        temperatureFilter={temperatureFilter}
+        setTemperatureFilter={setTemperatureFilter}
+      />
     </div>
   )
 }
