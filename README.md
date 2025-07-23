@@ -1,4 +1,4 @@
-# Web Development Project 6 - *Data Dashboard Part 2e*
+# Web Development Project 6 - *Data Dashboard Part 2*
 
 Submitted by: **Braulio Quintana**
 
