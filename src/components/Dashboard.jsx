@@ -10,7 +10,8 @@ const Dashboard = ({
   searchTerm, 
   setSearchTerm, 
   temperatureFilter, 
-  setTemperatureFilter 
+  setTemperatureFilter,
+  onCityClick 
 }) => {
   return (
     <div className="dashboard">
@@ -59,7 +60,11 @@ const Dashboard = ({
           </div>
         ) : weatherData.length > 0 ? (
           weatherData.map((data, index) => (
-            <WeatherCard key={`${data.cityDisplayName}-${index}`} data={data} />
+            <WeatherCard 
+              key={`${data.cityDisplayName}-${index}`} 
+              data={data} 
+              onClick={() => onCityClick && onCityClick(data)}
+            />
           ))
         ) : (
           <div className="no-results">

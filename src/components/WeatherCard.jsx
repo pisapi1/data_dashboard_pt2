@@ -1,6 +1,6 @@
 import './WeatherCard.css'
 
-const WeatherCard = ({ data }) => {
+const WeatherCard = ({ data, onClick }) => {
   // Helper function to convert Celsius to Fahrenheit
   const celsiusToFahrenheit = (celsius) => {
     return Math.round((celsius * 9/5) + 32)
@@ -21,7 +21,7 @@ const WeatherCard = ({ data }) => {
   }
 
   return (
-    <div className="weather-card">
+    <div className="weather-card" onClick={onClick} style={{ cursor: onClick ? 'pointer' : 'default' }}>
       <div className="card-header">
         <h3 className="city-name">{data.cityDisplayName}</h3>
         <div className="weather-icon">

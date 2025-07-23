@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Dashboard from './components/Dashboard'
+import WeatherDetail from './components/WeatherDetail'
 import './App.css'
 
 const API_KEY = import.meta.env.VITE_APP_API_KEY
@@ -10,6 +11,8 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [temperatureFilter, setTemperatureFilter] = useState('all')
+  const [currentView, setCurrentView] = useState('dashboard') // 'dashboard' or 'detail'
+  const [selectedCity, setSelectedCity] = useState(null)
 
   // Major cities to fetch weather data for
   const cities = [
@@ -55,6 +58,29 @@ function App() {
     fetchAllWeatherData()
   }, [])
 
+  // Handle URL changes for direct links
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname
+      if (path.startsWith('/city/')) {
+        const cityName = decodeURIComponent(path.split('/city/')[1])
+        const city = weatherData.find(d => d.cityDisplayName === cityName)
+        if (city) {
+          setSelectedCity(city)
+          setCurrentView('detail')
+        }
+      } else {
+        setCurrentView('dashboard')
+        setSelectedCity(null)
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    handlePopState() // Handle initial URL
+
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [weatherData])
+
   // Filter data based on search term and temperature
   useEffect(() => {
     let filtered = weatherData.filter(data =>
@@ -76,17 +102,41 @@ function App() {
     setFilteredData(filtered)
   }, [searchTerm, temperatureFilter, weatherData])
 
+  // Navigate to city detail
+  const navigateToCity = (cityData) => {
+    setSelectedCity(cityData)
+    setCurrentView('detail')
+    const url = `/city/${encodeURIComponent(cityData.cityDisplayName)}`
+    window.history.pushState({}, '', url)
+  }
+
+  // Navigate back to dashboard
+  const navigateToDashboard = () => {
+    setCurrentView('dashboard')
+    setSelectedCity(null)
+    window.history.pushState({}, '', '/')
+  }
+
   return (
     <div className="app">
-      <Dashboard 
-        weatherData={filteredData}
-        allData={weatherData}
-        loading={loading}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        temperatureFilter={temperatureFilter}
-        setTemperatureFilter={setTemperatureFilter}
-      />
+      {currentView === 'dashboard' ? (
+        <Dashboard 
+          weatherData={filteredData}
+          allData={weatherData}
+          loading={loading}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          temperatureFilter={temperatureFilter}
+          setTemperatureFilter={setTemperatureFilter}
+          onCityClick={navigateToCity}
+        />
+      ) : (
+        <WeatherDetail 
+          cityData={selectedCity}
+          allData={weatherData}
+          onBackToDashboard={navigateToDashboard}
+        />
+      )}
     </div>
   )
 }
